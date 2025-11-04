@@ -26,3 +26,5 @@ Objectif : Adapter les frais et choisir à quel profil de client on donne des pr
 Fait analysé : Crédits passés
 
 Dimentions : Client, Lieu, Temps, produit de crédit, plan, canal, devise,  segment_client
+
+rendu intermediaire : https://docs.google.com/document/d/11Jmp9IkFdTwJGwpeRiSxjuzIQwRDxW1ayTjP2_xc0Qg/edit?usp=sharing
