@@ -4,41 +4,41 @@ REFRESH COMPLETE ON DEMAND
 ENABLE QUERY REWRITE
 AS
 SELECT
-    c.type_client,
-    c.profession,
-    c.segment_comportemental,
-    d.annee,
-    d.nom_mois,
-    d.numero_mois,
-    l.pays,
-    i.est_frauduleux,
-    i.est_bloque,
+    c.TYPE_CLIENT,
+    c.PROFESSION,
+    c.SEGMENT_COMPORTEMENTAL,
+    d.ANNEE,
+    d.NOM_MOIS,
+    d.NUMERO_MOIS,
+    l.PAYS,
+    i.EST_FRAUDE AS est_frauduleux,
+    i.EST_BLOQUE AS est_bloque,
     COUNT(*) AS nb_transactions,
-    SUM(f.montant_total) AS sum_montant_total,
-    SUM(CASE WHEN i.est_frauduleux = 1 THEN f.montant_total ELSE 0 END) AS sum_montant_frauduleux,
-    COUNT(DISTINCT f.client_id) AS nb_clients_uniques,
-    SUM(f.montant_total) AS agg_sum_montant,
-    COUNT(f.montant_total) AS agg_count_montant
+    SUM(f.MONTANT_TOTAL) AS sum_montant_total,
+    SUM(CASE WHEN i.EST_FRAUDE = 1 THEN f.MONTANT_TOTAL ELSE 0 END) AS sum_montant_frauduleux,
+    COUNT(DISTINCT f.CLIENT_ID) AS nb_clients_uniques, 
+    SUM(f.MONTANT_TOTAL) AS agg_sum_montant,
+    COUNT(f.MONTANT_TOTAL) AS agg_count_montant
 FROM
     FAIT_TRANSACTIONS_DETAILLE f
 JOIN
-    VUE_CLIENTS_DETAILLE c ON f.client_id = c.client_id
+    DIM_CLIENTS c ON f.CLIENT_ID = c.CLIENT_KEY
 JOIN
-    VUE_DATE_DETAILLE d ON f.date_id = d.date_id
+    DIM_DATE d ON f.DATE_ID = d.DATE_KEY
 JOIN
-    VUE_LIEUX_DETAILLE l ON f.lieu_id = l.lieu_id
+    DIM_LIEUX l ON f.LIEU_ID = l.LIEU_KEY
 JOIN
-    VUE_INFO_TRANSACTION_DETAILLE i ON f.info_transaction_id = i.info_transaction_id
+    DIM_INFO_TRANSACTION i ON f.INFO_TRANSACTION_ID = i.INFOTRANSACTION_KEY
 GROUP BY
-    c.type_client,
-    c.profession,
-    c.segment_comportemental,
-    d.annee,
-    d.nom_mois,
-    d.numero_mois,
-    l.pays,
-    i.est_frauduleux,
-    i.est_bloque;
+    c.TYPE_CLIENT,
+    c.PROFESSION,
+    c.SEGMENT_COMPORTEMENTAL,
+    d.ANNEE,
+    d.NOM_MOIS,
+    d.NUMERO_MOIS,
+    l.PAYS,
+    i.EST_FRAUDE,
+    i.EST_BLOQUE;
 
 CREATE MATERIALIZED VIEW MV_OPERATION_TEMPS_AGG
 BUILD IMMEDIATE
@@ -46,28 +46,28 @@ REFRESH COMPLETE ON DEMAND
 ENABLE QUERY REWRITE
 AS
 SELECT
-    op.type_canal,
-    op.type_dispositif,
-    op.libelle_operation,
-    t.periode_journee,
-    t.tranche_horaire,
+    op.CANAL AS type_canal,
+    op.TYPE_DISPOSITIF AS type_dispositif,
+    op.LIBELLE_OPERATION AS libelle_operation,
+    t.PERIODE_JOURNEE AS periode_journee,
+    t.TRANCHE_HORAIRE AS tranche_horaire,
     COUNT(*) AS nb_transactions,
-    SUM(f.score_fraude) AS sum_score_fraude,
-    COUNT(f.score_fraude) AS count_score_fraude,
-    SUM(f.duree_traitement_ms) AS sum_duree_traitement,
-    COUNT(f.duree_traitement_ms) AS count_duree_traitement
+    SUM(f.SCORE_FRAUDE) AS sum_score_fraude,
+    COUNT(f.SCORE_FRAUDE) AS count_score_fraude,
+    SUM(f.DUREE_TRAITEMENT_MS) AS sum_duree_traitement,
+    COUNT(f.DUREE_TRAITEMENT_MS) AS count_duree_traitement
 FROM
     FAIT_TRANSACTIONS_DETAILLE f
 JOIN
-    VUE_MODES_OPERATION_DETAILLE op ON f.mode_operation_id = op.mode_operation_id
+    DIM_MODES_OPERATION op ON f.MODE_OPERATION_ID = op.MODES_OPERATION_KEY
 JOIN
-    VUE_TEMPS_DETAILLE t ON f.heure_id = t.heure_id
+    DIM_TEMPS t ON f.HEURE_ID = t.TEMPS_KEY
 GROUP BY
-    op.type_canal,
-    op.type_dispositif,
-    op.libelle_operation,
-    t.periode_journee,
-    t.tranche_horaire;
+    op.CANAL,
+    op.TYPE_DISPOSITIF,
+    op.LIBELLE_OPERATION,
+    t.PERIODE_JOURNEE,
+    t.TRANCHE_HORAIRE;
 
 CREATE MATERIALIZED VIEW MV_FINANCE_MARKETING_AGG
 BUILD IMMEDIATE
@@ -75,30 +75,30 @@ REFRESH COMPLETE ON DEMAND
 ENABLE QUERY REWRITE
 AS
 SELECT
-    m.categorie_marchand,
-    dev.nom_devise,
-    dev.est_crypto,
-    p.nom_plan,
-    op.libelle_operation,
+    m.CATEGORIE_MARCHAND AS categorie_marchand,
+    dev.NOM_DEVISE AS nom_devise,
+    dev.EST_CRYPTO AS est_crypto,
+    p.NOM_PLAN AS nom_plan,
+    op.LIBELLE_OPERATION AS libelle_operation,
     COUNT(*) AS nb_transactions,
-    SUM(f.montant_total) AS sum_montant_total,
-    SUM(f.frais) AS sum_frais,
-    SUM(f.cashback_gagne) AS sum_cashback_gagne,
-    SUM(CASE WHEN op.libelle_operation = 'depot' THEN f.montant_total ELSE 0 END) AS sum_depots,
-    SUM(CASE WHEN op.libelle_operation IN ('retrait', 'paiement', 'virement') THEN f.montant_total ELSE 0 END) AS sum_sorties
+    SUM(f.MONTANT_TOTAL) AS sum_montant_total,
+    SUM(f.FRAIS) AS sum_frais,
+    SUM(f.CASHBACK_GAGNE) AS sum_cashback_gagne,
+    SUM(CASE WHEN op.LIBELLE_OPERATION = 'depot' THEN f.MONTANT_TOTAL ELSE 0 END) AS sum_depots,
+    SUM(CASE WHEN op.LIBELLE_OPERATION IN ('retrait', 'paiement', 'virement') THEN f.MONTANT_TOTAL ELSE 0 END) AS sum_sorties
 FROM
     FAIT_TRANSACTIONS_DETAILLE f
 JOIN
-    VUE_MARCHANDS_DETAILLE m ON f.marchand_id = m.marchand_id
+    DIM_MARCHANDS m ON f.MARCHAND_ID = m.MARCHAND_KEY
 JOIN
-    VUE_DEVISES_DETAILLE dev ON f.devise_id = dev.devise_id
+    DIM_DEVISES dev ON f.DEVISE_ID = dev.DEVISE_KEY
 JOIN
-    VUE_PLANS_DETAILLE p ON f.plan_id = p.plan_id
+    DIM_PLANS p ON f.PLAN_ID = p.PLAN_KEY
 JOIN
-    VUE_MODES_OPERATION_DETAILLE op ON f.mode_operation_id = op.mode_operation_id
+    DIM_MODES_OPERATION op ON f.MODE_OPERATION_ID = op.MODES_OPERATION_KEY
 GROUP BY
-    m.categorie_marchand,
-    dev.nom_devise,
-    dev.est_crypto,
-    p.nom_plan,
-    op.libelle_operation;
+    m.CATEGORIE_MARCHAND,
+    dev.NOM_DEVISE,
+    dev.EST_CRYPTO,
+    p.NOM_PLAN,
+    op.LIBELLE_OPERATION;
